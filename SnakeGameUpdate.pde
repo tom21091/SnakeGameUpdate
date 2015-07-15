@@ -2,7 +2,7 @@
 
 typedef struct snode{
   uint8_t en;
-  uint8_t count;
+  uint16_t count;
   int *hue;
   uint8_t sat;
   uint8_t val;
@@ -70,8 +70,8 @@ void setup() {
 }
 
 void loop() {
-
-switch ( a ) {
+int update_flag=0;
+/*switch ( a ) {
   case b:
     // Code
     break;
@@ -81,7 +81,7 @@ switch ( a ) {
 default:
   // Code
   break;
-}
+}*/
 
 
   
@@ -126,6 +126,7 @@ default:
 
     //background has changed so set flag
     changed_flag = 1;
+    update_flag = 1;
   }
 
   //update background color at a certain rate
@@ -142,7 +143,10 @@ default:
   
   //only update the array and refresh LEDs if the state has changed
   if(changed_flag == 1){
-    update();
+    if(update_flag==1){
+      update();
+      update_flag=0;
+    }
     store_array();
     strip.refreshLEDs();
     //clear flag
@@ -150,33 +154,80 @@ default:
   }
 }
 
+void death(){
+  store_blank();
+  strip.refreshLEDs();
+  delay(50);
+  store_array();
+  strip.refreshLEDs();
+  delay(250);
+  store_blank();
+  strip.refreshLEDs();
+  delay(50);
+  store_array();
+  strip.refreshLEDs();
+  delay(200);
+  store_blank();
+  strip.refreshLEDs();
+  delay(50);
+  store_array();
+  strip.refreshLEDs();
+  delay(150);
+  store_blank();
+  strip.refreshLEDs();
+  delay(50);
+  store_array();
+  strip.refreshLEDs();
+  delay(100);
+  store_blank();
+  strip.refreshLEDs();
+  delay(50);
+  store_array();
+  strip.refreshLEDs();
+  delay(50);
+  store_blank();
+  strip.refreshLEDs();
+  delay(50);
+  store_array();
+  strip.refreshLEDs();
+  delay(30);
+  store_blank();
+  strip.refreshLEDs();
+  delay(30);
+  store_array();
+  strip.refreshLEDs();
+  delay(20);
+  store_blank();
+  strip.refreshLEDs();
+  delay(500);
+}
 
 //Updates the 2D snake grid array in memory
 void update(){
   lastbuf= {head[0], head[1]};
   switch (dir){
     case UP:
-      if (head[1]==0){reset_grid(); return;}  //if the head runs into the ceiling, you die
+      if (head[1]==0){death();reset_grid(); return;}  //if the head runs into the ceiling, you die
       else head[1]--;
       break;
     case DOWN:
-      if (head[1]==29){reset_grid(); return;}  //if the head runs into the floor, you die
+      if (head[1]==29){death();reset_grid(); return;}  //if the head runs into the floor, you die
       else head[1]++;
       break;
     case RIGHT:
-      if(head[0]==29){reset_grid(); return;}  //if the head runs into the right wall, you die
+      if(head[0]==29){death();reset_grid(); return;}  //if the head runs into the right wall, you die
       else head[0]++;
       break;
     case LEFT:
-      if(head[0]==0){reset_grid(); return;}  //if the head runs into the left wall, you die
+      if(head[0]==0){death();reset_grid(); return;}  //if the head runs into the left wall, you die
       else head[0]--;
       break;
   }
     snake_ptr=&grid[head[0]][head[1]];
-    if (snake_ptr->en==1){reset_grid(); return;}//Ran into self!
+    if (snake_ptr->en==1){death();reset_grid(); return;}//Ran into self!
     if (snake_ptr->en==2){//FOOD!
       length+=2;
-      difficulty-=2;
+      difficulty-=3;
       spawn_food();
     }
     snake_ptr->en=1;
@@ -222,7 +273,23 @@ void store_array(){
       }
     }
 }
-
+void store_blank(){
+  int s = 0;
+    for(i = 29; i >= 0 ; i--){
+      if(i % 2 == 0){ //is even
+       for(j = 0; j < 30; j++){
+         strip.HSVsetLEDColor(s, 0, 0, 0);
+         s++;
+       }
+      }
+      else{
+       for(j = 29; j >= 0; j--){
+         strip.HSVsetLEDColor(s, 0, 0, 0);
+         s++;
+       } 
+      }
+    }
+}
 //Randomly spawns an apple on the 2D grid
 void spawn_food(){
   //food={10,1};
@@ -241,17 +308,25 @@ void spawn_food(){
 void reset_grid(){
   //if the length is not the starting value, print/send off the high score
   if(length != 6){Serial.println(int(length));}
-  
   for (i=0;i<30;i++){
+    //Serial.print("i = ");Serial.println(i);
     for(j=0; j<30;j++){
+      //Serial.println("1");
       grid[i][j].en=0;
+      //Serial.println("2");
       grid[i][j].count=0;
+      //Serial.println("3");
       grid[i][j].hue=&backhue;
+      //Serial.println("4");
       grid[i][j].sat=255;
+      //Serial.println("5");
       grid[i][j].val=backbrightness;
+      //Serial.println("6");
       grid[i][j].tailptr=NULL;
+      //Serial.print("j = ");Serial.println(j);
     }
   }
+  
   dir= RIGHT;
   head={6,1};
   length=6;
@@ -266,6 +341,6 @@ void reset_grid(){
     snake_ptr=snake_ptr->tailptr;
   }  
   spawn_food();
-  difficulty=100;
+  difficulty=165;
 }
 
